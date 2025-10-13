@@ -49,4 +49,46 @@ pub enum ErrorCode {
 
     #[msg("Transfer failed")]
     TransferFailed,
+
+    #[msg("Invalid poll type")]
+    InvalidPollType,
+    
+    #[msg("You have already voted in this poll")]
+    AlreadyVoted,
+    
+    #[msg("Poll is not active")]
+    PollNotActive,
+    
+    #[msg("Invalid option selected")]
+    InvalidOption,
+    
+    #[msg("Poll has already ended")]
+    PollAlreadyEnded,
+    
+    #[msg("Target user is required for this poll type")]
+    MissingTarget,
+    
+    #[msg("Insufficient options for poll")]
+    InsufficientOptions,
+    
+    #[msg("Too many options for poll")]
+    TooManyOptions,
+    
+    #[msg("Poll question cannot be empty")]
+    EmptyQuestion,
+    
+    #[msg("Poll question is too long")]
+    QuestionTooLong,
+    
+    #[msg("Invalid target user")]
+    InvalidTarget,
+
+    #[msg("User Not a Member of Channel")]
+    NotMember,
+    
+    #[msg("User not authorized")]
+    Unauthorized,
+
+    #[msg("Channel is Invalid")]
+    InvalidChannel,
 }

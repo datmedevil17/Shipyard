@@ -7,6 +7,7 @@ import { Navbar } from "@/components/navbar";
 import AppWalletProvider from "@/components/AppWalletProvider";
 import { ToastContainer } from 'react-toastify'
 import { ReactQueryProvider } from "./providers";
+import { SocketProvider } from "@/lib/socket";
 
 
 const geistSans = Geist({
@@ -36,6 +37,7 @@ export default function RootLayout({
 
       ><ReactQueryProvider>
         <AppWalletProvider>
+          <SocketProvider>
           <Navbar />
           {children}
           <ToastContainer
@@ -50,6 +52,7 @@ export default function RootLayout({
                 pauseOnHover
                 theme="dark"
               />
+              </SocketProvider>
 
               
         </AppWalletProvider>

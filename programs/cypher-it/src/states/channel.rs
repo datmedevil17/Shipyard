@@ -1,3 +1,4 @@
+// states/channel.rs
 use anchor_lang::prelude::*;
 
 #[account]
@@ -14,4 +15,7 @@ pub struct Channel {
     pub member_count: u64,
     pub created_at: i64,
     pub updated_at: i64,
+    #[max_len(256)]
+    pub img_url: String,
+    pub poll_count: u64, // Track number of polls created
 }
