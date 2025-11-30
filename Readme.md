@@ -327,123 +327,158 @@ const loadMessages = () => {
 };
 ```
 
-## 🛠️ Technical Stack
+## 🛠️ Technical Dependencies
 
-### Blockchain
-- **Solana**: High-performance blockchain platform
-- **Anchor**: Rust framework for Solana programs
-- **SPL Token**: Token standard for access control
-- **Web3.js**: JavaScript SDK for Solana interaction
+### Smart Contract Stack
+```toml
+[dependencies]
+anchor-lang = "0.31.0"
+anchor-spl = "0.31.1"
+ephemeral-rollups-sdk = { version = "0.3.4", features = ["anchor"] }
+```
 
-### Frontend
-- **Next.js 15**: React framework with App Router
-- **TypeScript**: Type-safe development
-- **Tailwind CSS**: Utility-first CSS framework
-- **Radix UI**: Accessible component library
-- **Solana Wallet Adapter**: Multi-wallet support
+### Frontend & Backend
+```json
+{
+  "core": {
+    "next": "15.5.4",
+    "react": "19.1.0",
+    "typescript": "^5",
+    "@solana/web3.js": "^1.95.1",
+    "@coral-xyz/anchor": "^0.30.1"
+  },
+  "realtime": {
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "express": "^4.18.2"
+  },
+  "solana": {
+    "@solana/wallet-adapter-react": "^0.15.35",
+    "@solana/wallet-adapter-react-ui": "^0.9.35",
+    "@solana/wallet-adapter-wallets": "^0.19.32",
+    "@solana/spl-token": "^0.4.8"
+  }
+}
+```
 
-### Backend
-- **Node.js**: Server runtime
-- **Express**: Web framework
-- **Socket.io**: Real-time bidirectional communication
-- **CORS**: Cross-origin resource sharing
-
-### Development Tools
-- **Prettier**: Code formatting
-- **Biome**: Fast JavaScript toolchain
-- **Concurrently**: Run multiple scripts simultaneously
-- **ts-mocha**: TypeScript testing framework
-
-## 📦 Installation & Setup
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js v18+ and npm/yarn
-- Rust and Cargo
-- Solana CLI tools
-- Anchor CLI v0.31.0+
-
-### 1. Clone the Repository
 ```bash
-git clone <repository-url>
-cd shipyard
+# Solana CLI
+curl --proto '=https' --tlsv1.2 -sSf https://release.solana.com/v1.18.22/install | sh
+
+# Anchor CLI
+cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+avm install 0.31.0
+avm use 0.31.0
+
+# Node.js 18+
+node --version  # v18.0.0+
 ```
 
-### 2. Install Dependencies
+### Installation
 
-**Root dependencies (Anchor/Testing):**
+1. **Clone and Install**
 ```bash
+git clone <repo-url> && cd shipyard
 npm install
+cd app && npm install
 ```
 
-**Frontend dependencies:**
+2. **Environment Setup**
 ```bash
-cd app
-npm install
-```
-
-### 3. Environment Setup
-
-Create `.env.local` in the `app/` directory:
-```env
+# app/.env.local
 NEXT_PUBLIC_SOLANA_NETWORK=devnet
 NEXT_PUBLIC_PROGRAM_ID=2QZ6YQeJmAfg6iWe76amzgfEHZsGBUXtC41a4reCiqPC
+NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
 ```
 
-### 4. Build and Deploy Smart Contract
+3. **Smart Contract Deployment**
 ```bash
-# Build the program
+# Build program
 anchor build
+
+# Generate types
+anchor build --idl target/idl/cypher_it.json
 
 # Deploy to devnet
 anchor deploy --provider.cluster devnet
-```
 
-### 5. Start Development Environment
-```bash
-# Start both frontend and backend
-cd app
-npm run dev:all
-```
-
-This will start:
-- Next.js frontend on `http://localhost:3002`
-- Socket.io server on `http://localhost:3001`
-
-## 🎮 Usage Guide
-
-### Getting Started
-1. **Connect Wallet**: Click "Connect Wallet" and choose your preferred Solana wallet
-2. **Create Profile**: Set up your display name, bio, and avatar
-3. **Browse Channels**: View available channels and their entry requirements
-4. **Join Channels**: Pay the required tokens to access premium channels
-5. **Start Chatting**: Participate in real-time conversations
-
-### Creating Channels
-1. Navigate to channel creation
-2. Set channel name, description, and image
-3. Configure access requirements (free or token-gated)
-4. Set pricing in SOL or custom tokens
-5. Deploy and start building your community
-
-### Governance Participation
-1. View active polls in channels you've joined
-2. Vote on proposals using your tokens
-3. Create new polls for community decisions
-4. Delegate voting rights to trusted members
-
-## 🧪 Testing
-
-### Smart Contract Tests
-```bash
-# Run Anchor tests
+# Run tests
 anchor test
 ```
 
-### Frontend Tests
+4. **Start Development**
 ```bash
+# Terminal 1: Start frontend & socket server
 cd app
-npm run lint
-npm run build
+npm run dev:all
+
+# Runs:
+# - Next.js on http://localhost:3002
+# - Socket.io server on http://localhost:3001
+```
+
+## 🧪 Testing Smart Contracts
+
+### Basic Test Structure
+```typescript
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
+import { CypherIt } from "../target/types/cypher_it";
+
+describe("cypher-it", () => {
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+  
+  const program = anchor.workspace.cypherIt as Program<CypherIt>;
+
+  it("Initialize program", async () => {
+    const tx = await program.methods.initialize().rpc();
+    console.log("Transaction signature:", tx);
+  });
+
+  it("Create channel", async () => {
+    const tx = await program.methods
+      .createChannel("general", "General discussion", 0, false, "")
+      .rpc();
+  });
+
+  it("Create and vote on poll with ephemeral rollups", async () => {
+    // Create poll
+    const pollTx = await program.methods
+      .createPoll(1, 2, "Test poll?", ["Yes", "No"], 3600)
+      .rpc();
+    
+    // Delegate to ephemeral rollup
+    const delegateTx = await program.methods
+      .delegatePoll(1, 0)
+      .rpc();
+    
+    // Vote (gasless on rollup)
+    const voteTx = await program.methods
+      .votePoll(1, 0)
+      .rpc();
+    
+    // Commit back to L1
+    const commitTx = await program.methods
+      .undelegatePoll()
+      .rpc();
+  });
+});
+```
+
+### Test Execution
+```bash
+# Run all tests
+anchor test
+
+# Run specific test file
+anchor test -- --grep "poll"
+
+# Test with console logs
+anchor test -- --verbose
 ```
 
 ## 📚 Smart Contract Reference
